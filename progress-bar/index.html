@@ -108,7 +108,7 @@
                 // Define variables
                 let allOptionElement = null;
                 let contentTimeoutId = null;
-                let ytLikeIntervalId = null;
+                let animationRequestId = null;
 
                 // Function to create option anchor
                 function createOptionAnchor(option) {
@@ -183,11 +183,11 @@
                     if (contentTimeoutId !== null) {
                         clearTimeout(contentTimeoutId);
                     }
-                    if (ytLikeIntervalId !== null) {
-                        clearTimeout(ytLikeIntervalId);
+                    if (animationRequestId !== null) {
+                        cancelAnimationFrame(animationRequestId);                        
                     }
 
-                    ytLikeIntervalId = null;
+                    animationRequestId = null;
                     contentTimeoutId = null;
 
                     document.getElementById("yt-like-id").style.width = "0%";
@@ -221,12 +221,15 @@
                         console.log(width);
 
                         if (deltaTime >= 3000) {
-                            clearInterval(ytLikeIntervalId);
-                            ytLikeIntervalId = null;
+                            animationRequestId = null;
+                        }
+                        else {
+                            animationRequestId = requestAnimationFrame(animateProgress);
                         }
                     };
 
-                    ytLikeIntervalId = setInterval(animateProgress, 30);
+                    animateProgress();
+                    
                 }
 
                 // Function to add content to main
