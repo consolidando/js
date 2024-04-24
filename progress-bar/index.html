@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Frontend task</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body, html {
+                margin: 0;
+                padding: 0;
+                min-width: 400px;
+                min-height: 300px;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+
+            main {
+                flex: 1;
+                overflow: auto;
+                padding: 10px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+
+            header , footer{
+                background-color: #333;
+                color: #fff;
+                height: 53px;
+            }
+
+            footer
+            {
+                text-align: center;
+                line-height: 53px;
+            }
+
+            footer a
+            {
+                text-decoration: none;
+                color: #4caf50;
+            }
+
+            nav {
+                display: flex;
+                background-color: #555;
+            }
+
+            nav a {
+                color: #fff;
+                text-decoration: none;
+                flex-grow: 1;
+                text-align: center;
+                transition: background-color 0.3s ease;
+                line-height: 50px;
+            }
+
+            nav a:hover {
+                background-color: #777;
+            }
+
+            .selected {
+                font-weight: bold;
+                text-decoration: underline;
+                pointer-events: none;
+            }
+
+            .yt-like {
+                width: 100%;
+                background-color: #f0f0f0;
+            }
+
+            .yt-like-progress-bar {
+                width: 0%;
+                height: 3px;
+                background-color: #4caf50;
+            }
+
+            #content-selected-options::before {
+                content: "< ";
+            }
+
+            #content-selected-options::after {
+                content: " >";
+            }
+
+        </style>        
+    </head>
+    <body>
+        <header id='top-toolbar'>
+            <nav id='option-placeholders'>               
+            </nav>
+            <div class="yt-like">
+                <div class="yt-like-progress-bar" id='yt-like-id'></div>
+            </div>
+        </header>
+        <main id='main-content'>
+
+        </main>
+        <footer>
+            <a href="https://diy.elmolidelanoguera.com/">&copy; 2024 Consolidando</a>
+        </footer>   
+
+        <script>
+            (function () {
+                // Define variables
+                let allOptionElement = null;
+                let contentTimeoutId = null;
+                let ytLikeIntervalId = null;
+
+                // Function to create option anchor
+                function createOptionAnchor(option) {
+                    let link = document.createElement("a");
+                    link.textContent = option.charAt(0).toUpperCase() + option.slice(1);
+                    link.addEventListener("click", optionSelectedEvent);
+                    return link;
+                }
+
+                // Function to generate links from fragment or default options
+                function generateLinksFromFragmentOrDefault() {
+                    let options;
+                    let fragment = window.location.hash.substring(1);
+
+                    let aux = fragment.split('|');
+
+                    if (aux.length > 2) {
+                        options = aux;
+                    } else {
+                        options = ['Opt1', 'Opt2', 'Opt3'];
+                    }
+
+                    let nav = document.getElementById("option-placeholders");
+
+                    // add all link
+                    allOptionElement = createOptionAnchor('All');
+                    nav.appendChild(allOptionElement);
+
+                    // Generate a link for each option and add it to the menu
+                    options.forEach((option) => {
+                        let link = createOptionAnchor(option);
+                        nav.appendChild(link);
+                    });
+
+                    // default values 
+                    optionSelected(allOptionElement);
+                }
+
+                // Function to handle option selected event
+                function optionSelected(optionElement) {
+                    if (optionElement.classList.contains("selected")) {
+                        return;
+                    }
+
+                    if (optionElement === allOptionElement) {
+                        unselectAllOptions();
+                    } else {
+                        allOptionElement.classList.remove('selected');
+                    }
+
+                    optionElement.classList.add('selected');
+
+                    fetchContent();
+                }
+
+                // Event handler for option selected event
+                function optionSelectedEvent(event) {
+                    event.preventDefault();
+                    optionSelected(event.target);
+                }
+
+                // Function to unselect all options
+                function unselectAllOptions() {
+                    let links = document.querySelectorAll("#option-placeholders a");
+                    links.forEach(function (link) {
+                        link.classList.remove('selected');
+                    });
+                }
+
+                // Function to abort and reset previous fetch
+                function abortAndResetPreviousFetch() {
+                    if (contentTimeoutId !== null) {
+                        clearTimeout(contentTimeoutId);
+                    }
+                    if (ytLikeIntervalId !== null) {
+                        clearTimeout(ytLikeIntervalId);
+                    }
+
+                    ytLikeIntervalId = null;
+                    contentTimeoutId = null;
+
+                    document.getElementById("yt-like-id").style.width = "0%";
+                }
+
+                // Function to fetch content
+                function fetchContent() {
+                    abortAndResetPreviousFetch();
+
+                    let progressBar = document.getElementById("yt-like-id");
+                    let startTime = Date.now();
+
+                    const contentPromise = new Promise((resolve) => {
+                        contentTimeoutId = setTimeout(() => {
+                            resolve();
+                            contentTimeoutId = null;
+                        }, 3000);
+                    });
+
+                    contentPromise.then(() => {
+                        addContentToMain();
+                    });
+
+                    const animateProgress = () => {
+                        let currentTime = Date.now();
+                        let deltaTime = currentTime - startTime;
+                        let width = deltaTime >= 3000 ? "100%" : Math.floor(deltaTime / 30) + "%";
+
+                        progressBar.style.width = width;
+
+                        console.log(width);
+
+                        if (deltaTime >= 3000) {
+                            clearInterval(ytLikeIntervalId);
+                            ytLikeIntervalId = null;
+                        }
+                    };
+
+                    ytLikeIntervalId = setInterval(animateProgress, 30);
+                }
+
+                // Function to add content to main
+                function addContentToMain() {
+                    const mainContent = document.getElementById("main-content");
+                    mainContent.innerHTML = "";
+
+                    const selectedOptions = document.querySelectorAll("#option-placeholders a.selected");
+                    const contentContainerTitle = document.createElement("div");
+                    contentContainerTitle.textContent = "Currently selected: ";
+                    mainContent.appendChild(contentContainerTitle);
+
+                    const contentContainer = document.createElement("div");
+                    contentContainer.id = 'content-selected-options';
+                    selectedOptions.forEach((option, index) => {
+                        const optionText = option.textContent;
+                        const optionElement = document.createElement("span");
+                        optionElement.textContent = optionText;
+                        contentContainer.appendChild(optionElement);
+                        if (index < selectedOptions.length - 1) {
+                            contentContainer.appendChild(document.createTextNode(", "));
+                        }
+                    });
+
+                    mainContent.appendChild(contentContainer);
+                }
+
+                // Invoke the function to start execution
+                generateLinksFromFragmentOrDefault();
+            })();
+        </script>
+    </body>    
+</html>
