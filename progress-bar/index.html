@@ -63,7 +63,10 @@
 
             .selected {
                 font-weight: bold;
-                text-decoration: underline;
+                text-decoration: underline;                
+            }
+
+            .selected-all{
                 pointer-events: none;
             }
 
@@ -148,18 +151,17 @@
                 }
 
                 // Function to handle option selected event
-                function optionSelected(optionElement) {
-                    if (optionElement.classList.contains("selected")) {
-                        return;
-                    }
+                function optionSelected(optionElement) {                    
 
                     if (optionElement === allOptionElement) {
                         unselectAllOptions();
+                        allOptionElement.classList.add('selected-all');
                     } else {
+                        allOptionElement.classList.remove('selected-all');
                         allOptionElement.classList.remove('selected');
                     }
 
-                    optionElement.classList.add('selected');
+                    optionElement.classList.toggle('selected');
 
                     fetchContent();
                 }
